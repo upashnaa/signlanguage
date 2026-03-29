@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Handsign — ASL Translator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+<script>
+const video = document.createElement("video");
+video.autoplay = true;
+video.style.display = "none";
+document.body.appendChild(video);
+
+// Start camera
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
+    video.srcObject = stream;
+  });
+
+// Send frame to backend every 1 second
+setInterval(async () => {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
+
+  const formData = new FormData();
+  formData.append("file", blob);
+
+  const response = await fetch("http://127.0.0.1:8000/predict", {
+    method: "POST",
+    body: formData
+  });
+
+  const result = await response.json();
+
+  document.getElementById("current-word").innerText = result.word;
+  document.getElementById("conf-val").innerText = result.confidence + "%";
+  document.getElementById("conf-fill").style.width = result.confidence + "%";
+
+}, 1000);
+</script>

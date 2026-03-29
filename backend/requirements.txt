@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+websockets
+mediapipe
+opencv-python
+
+numpy
+scikit-learn
+python-multipart
